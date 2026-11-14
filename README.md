@@ -12,13 +12,23 @@ npm run build
 ```
 The build encodes all four clips as muted H.264 MP4s without changing their order or trimming their duration. It checks the 25 MiB Cloudflare Pages per-file limit and writes the deployable site to `.output/public`. Set `FFMPEG_PATH` to use a specific FFmpeg executable.
 
-## GitHub and Cloudflare Pages
-After review, add these project files to a private GitHub repository. The included GitHub Actions workflow installs FFmpeg, runs the checks, and produces the `cloudflare-pages` build artifact.
+## Deploy with Cloudflare Pages
 
-For the first deployment, download and extract that artifact and upload the resulting directory to a Cloudflare Pages **Direct Upload** project. Upload the directory whose root contains `index.html`, `_headers` and `media/`. You can also upload the local `.output/public` build from the command above. Pages Direct Upload supports a later automated deploy from GitHub Actions.
+In Workers & Pages, create a Pages project and choose Import an existing Git repository. Connect this repository and enter:
 
-If you prefer Cloudflare to build on Git pushes, create a **Git-integrated** project instead. Set the framework preset to None, the root directory to the repository root, the build command to `npm run build`, and the output directory to `.output/public`. That environment must provide FFmpeg. Cloudflare does not support switching an existing Git-integrated project to Direct Upload.
+| Setting | Value |
+| --- | --- |
+| Production branch | `main` |
+| Framework preset | None |
+| Build command | `sh scripts/build-cloudflare.sh` |
+| Build output directory | `.output/public` |
+| Root directory | Leave blank |
+| Build environment variables | `NODE_VERSION=22`, `PYTHON_VERSION=3.12.7` |
 
-Use Cloudflare Access or another host access control for client-only review. The included noindex settings are search-engine hints. Confirm the proposed footage and imagery with the clinic before public launch.
+The build uses FFmpeg if available. Otherwise it installs a pinned FFmpeg binary package in a temporary Python virtual environment. The build checks the asset size limit before deployment. Save and Deploy, then open the `pages.dev` URL from the deployment summary.
 
-Cloudflare documentation: https://developers.cloudflare.com/pages/how-to/use-direct-upload-with-continuous-integration/
+For a Pages Direct Upload project, download the `cloudflare-pages` artifact from the GitHub Actions workflow, extract it, and upload the directory containing `index.html` and `media/`.
+
+The deployed URL is publicly reachable by default. The included noindex settings control indexing. Use access controls for client-only review.
+
+Cloudflare documentation: https://developers.cloudflare.com/pages/get-started/git-integration/
